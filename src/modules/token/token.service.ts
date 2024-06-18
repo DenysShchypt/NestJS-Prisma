@@ -8,7 +8,7 @@ export class TokenService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
-  public async generateJwtToken(user): Promise<string> {
+  public async generateJwtToken(user: { email: string }): Promise<string> {
     const payload = { user };
     return this.jwtService.sign(payload, {
       secret: this.configService.get('secret'),

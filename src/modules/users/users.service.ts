@@ -1,9 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { APP_USER_FIELDS, USER_SELECT_FIELDS } from '../../common/constants';
+import {
+  APP_USER_FIELDS,
+  USER_SELECT_FIELDS,
+  USER_UPDATE_FIELDS,
+} from '../../common/constants';
 import { AppErrors } from 'src/common/errors';
 import { RegisterUserDTO } from '../auth/dto';
+import { UserUpdateDTO } from './dto';
+import { UpdateUserResponse, UserResponseInfo } from './responses';
 
 @Injectable()
 export class UsersService {
@@ -16,24 +22,31 @@ export class UsersService {
     return await bcrypt.hash(password, salt);
   }
 
-  public async getPublicUser(email: string) {
-    return await this.prisma.user.findUnique({
-      where: { email },
+  public async getPublicUser(idOrEmail: number | string) {
+    const user = await this.prisma.user.findFirst({
+      where:
+        typeof idOrEmail === 'string'
+          ? { email: idOrEmail }
+          : { id: idOrEmail },
       select: USER_SELECT_FIELDS,
     });
+    if (!user) throw new BadRequestException(AppErrors.USER_NOT_FOUND);
+    return user;
   }
 
-  async getUserAllInfo(emailOrId: number | string) {
+  async getUserAllInfo(idOrEmail: number | string) {
     return await this.prisma.user.findUnique({
       where:
-        typeof emailOrId === 'string'
-          ? { email: emailOrId }
-          : { id: emailOrId },
+        typeof idOrEmail === 'string'
+          ? { email: idOrEmail }
+          : { id: idOrEmail },
       select: APP_USER_FIELDS,
     });
   }
 
-  public async createUser(dto: RegisterUserDTO): Promise<any | boolean> {
+  public async createUser(
+    dto: RegisterUserDTO,
+  ): Promise<UserResponseInfo | true> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -52,21 +65,26 @@ export class UsersService {
       select: USER_SELECT_FIELDS,
     });
   }
-  public async deleteUser(id: number): Promise<void | Error> {
+  public async updateUser(
+    id: number,
+    dto: UserUpdateDTO,
+  ): Promise<UpdateUserResponse | Error> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) return new BadRequestException(AppErrors.USER_NOT_FOUND);
-    await this.prisma.user.delete({ where: { id } });
-  }
-  public async updateUser(dto: any) {
-    const user = await this.prisma.user.findUnique({ where: { id: dto.id } });
-    if (!user) return new BadRequestException(AppErrors.USER_NOT_FOUND);
     return await this.prisma.user.update({
-      where: { id: dto.id },
+      where: { id },
       data: {
         email: dto.email,
         name: dto.name,
         wallet: dto.wallet,
       },
+      select: USER_UPDATE_FIELDS,
     });
+  }
+
+  public async deleteUser(id: number): Promise<void | Error> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) return new BadRequestException(AppErrors.USER_NOT_FOUND);
+    await this.prisma.user.delete({ where: { id } });
   }
 }
