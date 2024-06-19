@@ -24,7 +24,7 @@ export class UsersController {
   @Get('info/:idOrEmail')
   public async getInfoUser(
     @Param('idOrEmail') idOrEmail: string,
-  ): Promise<UserResponseInfo> {
+  ): Promise<UserResponseInfo | Error> {
     const idOrEmailParam = isNaN(Number(idOrEmail))
       ? idOrEmail
       : Number(idOrEmail);

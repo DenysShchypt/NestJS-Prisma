@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsNumber, IsString } from 'class-validator';
+import { Role } from 'src/common/interfaces/auth';
 
 export class UserResponseInfo {
   @ApiProperty({ example: 'John' })
@@ -14,6 +15,10 @@ export class UserResponseInfo {
   @ApiProperty({ example: 1 })
   @IsNumber()
   id: number;
+  @ApiProperty({ example: ['ADMIN', 'USER'], enum: Role, isArray: true })
+  @IsArray()
+  @IsEnum(Role, { each: true })
+  roles: Role[];
 }
 
 export class UpdateUserResponse {

@@ -10,6 +10,7 @@ import { AppErrors } from 'src/common/errors';
 import { RegisterUserDTO } from '../auth/dto';
 import { UserUpdateDTO } from './dto';
 import { UpdateUserResponse, UserResponseInfo } from './responses';
+import { Role } from 'src/common/interfaces/auth';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +23,9 @@ export class UsersService {
     return await bcrypt.hash(password, salt);
   }
 
-  public async getPublicUser(idOrEmail: number | string) {
+  public async getPublicUser(
+    idOrEmail: number | string,
+  ): Promise<UserResponseInfo | Error> {
     const user = await this.prisma.user.findFirst({
       where:
         typeof idOrEmail === 'string'
@@ -31,7 +34,7 @@ export class UsersService {
       select: USER_SELECT_FIELDS,
     });
     if (!user) throw new BadRequestException(AppErrors.USER_NOT_FOUND);
-    return user;
+    return user as UserResponseInfo;
   }
 
   async getUserAllInfo(idOrEmail: number | string) {
@@ -54,16 +57,16 @@ export class UsersService {
     if (user) return true;
     const salt = await bcrypt.genSalt();
     dto.password = await this.hashPassword(dto.password, salt);
-    return await this.prisma.user.create({
+    return (await this.prisma.user.create({
       data: {
         email: dto.email,
         name: dto.name,
         password: dto.password,
         wallet: dto.wallet,
-        roles: ['USER'],
+        roles: [Role.USER],
       },
       select: USER_SELECT_FIELDS,
-    });
+    })) as UserResponseInfo;
   }
   public async updateUser(
     id: number,

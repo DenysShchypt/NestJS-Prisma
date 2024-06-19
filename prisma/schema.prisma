@@ -20,7 +20,7 @@ model User {
   wallet         Float            @default(0)
   createAt       DateTime         @default(now()) @map("created_at")
   updateAt       DateTime         @default(now()) @map("updated_at")
-  roles          Role[]
+  roles          Role[]          
   payment        Payment[]
   SuccessPayment SuccessPayment[]
   FailedPayment  FailedPayment[]

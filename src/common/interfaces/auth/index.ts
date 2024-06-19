@@ -7,4 +7,10 @@ export interface IJwtPlayLoad {
 export interface IUserJWT {
   email: string;
   name: string;
+  roles: Role[];
+}
+
+export enum Role {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
 }

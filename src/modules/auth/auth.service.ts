@@ -22,6 +22,7 @@ export class AuthService {
       ...newUser,
       id: newUser.id,
       wallet: 0,
+      roles: newUser.roles,
     };
     const payload = {
       email: dto.email,
@@ -47,11 +48,12 @@ export class AuthService {
       email: user.email,
       id: user.id,
       name: user.name,
+      roles: user.roles,
     };
     const token = await this.tokenService.generateJwtToken(payload);
     return {
       ...user,
       token,
-    };
+    } as RegisterUserResponse;
   }
 }

@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNumber, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsString,
+} from 'class-validator';
+import { Role } from 'src/common/interfaces/auth';
 
 export class RegisterUserResponse {
   @ApiProperty({ example: 'John' })
@@ -19,6 +26,12 @@ export class RegisterUserResponse {
   @Expose()
   @IsNumber()
   id: number;
+  @ApiProperty({ example: ['ADMIN', 'USER'], enum: Role, isArray: true })
+  @Expose()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsEnum(Role, { each: true })
+  roles: Role[];
   @ApiProperty({
     example:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImVtYWlsIjoiZHV5dUB1a3IubmV0In0sImlhdCI6MTcxODcyMjY3NiwiZXhwIjoxNzE4ODA5MDc2fQ.CwnOiN5RvZzURWpdGM8q5HTdaFN2sjBNIe2poP2jQgY',
