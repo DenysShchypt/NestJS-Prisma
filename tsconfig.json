@@ -41,6 +41,12 @@
       ],
       "@auth/*": [
         "src/auth/*"
+      ],
+      "@common/common": [
+        "libs/common/src"
+      ],
+      "@common/common/*": [
+        "libs/common/src/*"
       ]
     }
   }

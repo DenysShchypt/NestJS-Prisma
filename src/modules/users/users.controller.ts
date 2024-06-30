@@ -25,10 +25,7 @@ export class UsersController {
   public async getInfoUser(
     @Param('idOrEmail') idOrEmail: string,
   ): Promise<UserResponseInfo | Error> {
-    const idOrEmailParam = isNaN(Number(idOrEmail))
-      ? idOrEmail
-      : Number(idOrEmail);
-    return await this.usersService.getPublicUser(idOrEmailParam);
+    return await this.usersService.getPublicUser(idOrEmail);
   }
   @ApiResponse({ status: 200, type: UpdateUserResponse })
   @UseGuards(JWTAuthGuard)

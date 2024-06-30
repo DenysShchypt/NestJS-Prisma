@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import validator from 'validator';
 import {
   APP_USER_FIELDS,
   USER_SELECT_FIELDS,
@@ -20,29 +21,32 @@ export class UsersService {
     password: string | Buffer,
     salt: string,
   ): Promise<string> {
-    return await bcrypt.hash(password, salt);
+    return bcrypt.hashSync(password, salt);
   }
-
+  private async isValidUuid(val: string): Promise<boolean> {
+    return validator.isUUID(val);
+  }
   public async getPublicUser(
-    idOrEmail: number | string,
+    idOrEmail: string,
   ): Promise<UserResponseInfo | Error> {
     const user = await this.prisma.user.findFirst({
-      where:
-        typeof idOrEmail === 'string'
-          ? { email: idOrEmail }
-          : { id: idOrEmail },
+      where: {
+        OR: [{ id: idOrEmail }, { email: idOrEmail }],
+      },
       select: USER_SELECT_FIELDS,
     });
     if (!user) throw new BadRequestException(AppErrors.USER_NOT_FOUND);
     return user as UserResponseInfo;
   }
 
-  async getUserAllInfo(idOrEmail: number | string) {
-    return await this.prisma.user.findUnique({
-      where:
-        typeof idOrEmail === 'string'
-          ? { email: idOrEmail }
-          : { id: idOrEmail },
+  public async getUserAllInfo(idOrEmail: string) {
+    return await this.prisma.user.findFirst({
+      // where: {
+      //   OR: [{ id: idOrEmail }, { email: idOrEmail }],
+      // },
+      where: (await this.isValidUuid(idOrEmail))
+        ? { id: idOrEmail }
+        : { email: idOrEmail },
       select: APP_USER_FIELDS,
     });
   }
@@ -62,6 +66,7 @@ export class UsersService {
         email: dto.email,
         name: dto.name,
         password: dto.password,
+        passwordRepeat: dto.passwordRepeat,
         wallet: dto.wallet,
         roles: [Role.USER],
       },
@@ -69,7 +74,7 @@ export class UsersService {
     })) as UserResponseInfo;
   }
   public async updateUser(
-    id: number,
+    id: string,
     dto: UserUpdateDTO,
   ): Promise<UpdateUserResponse | Error> {
     const user = await this.prisma.user.findUnique({ where: { id } });
@@ -85,7 +90,7 @@ export class UsersService {
     });
   }
 
-  public async deleteUser(id: number): Promise<void | Error> {
+  public async deleteUser(id: string): Promise<void | Error> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) return new BadRequestException(AppErrors.USER_NOT_FOUND);
     await this.prisma.user.delete({ where: { id } });

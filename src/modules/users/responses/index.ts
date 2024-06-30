@@ -14,7 +14,7 @@ export class UserResponseInfo {
   wallet: number;
   @ApiProperty({ example: 1 })
   @IsNumber()
-  id: number;
+  id: string;
   @ApiProperty({ example: ['ADMIN', 'USER'], enum: Role, isArray: true })
   @IsArray()
   @IsEnum(Role, { each: true })

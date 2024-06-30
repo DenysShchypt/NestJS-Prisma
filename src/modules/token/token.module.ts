@@ -3,6 +3,7 @@ import { TokenService } from './token.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Module({
   imports: [
@@ -16,13 +17,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('secret'),
         signOptions: {
-          expiresIn: configService.get<string>('expiresIn'),
+          expiresIn: configService.get<string>('expireJwt'),
         },
       }),
       inject: [ConfigService],
     }),
   ],
-  providers: [TokenService, JwtService],
+  providers: [TokenService, JwtService, PrismaService],
   exports: [TokenService],
 })
 export class TokenModule {}
