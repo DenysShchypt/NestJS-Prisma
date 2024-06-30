@@ -3,6 +3,12 @@ export const USER_SELECT_FIELDS = {
   email: true,
   name: true,
   id: true,
+  roles: true,
+};
+export const USER_UPDATE_FIELDS = {
+  wallet: true,
+  email: true,
+  name: true,
 };
 
 export const APP_USER_FIELDS = {
