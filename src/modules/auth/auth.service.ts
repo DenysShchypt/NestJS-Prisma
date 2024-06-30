@@ -39,19 +39,16 @@ export class AuthService {
     };
   }
 
-  public async loginUser(
-    dto: LoginUserDTO,
-  ): Promise<RegisterUserResponse | Error> {
+  public async loginUser(dto: LoginUserDTO) {
     const user = await this.userService
       .getUserAllInfo(dto.email)
       .catch((error) => {
         this.logger.error(`Error during login user: ${error.message}`);
         return null;
       });
-    if (!user) return new BadRequestException(AppErrors.USER_NOT_FOUND);
+    if (!user) throw new BadRequestException(AppErrors.USER_NOT_FOUND);
     const checkPassword = await bcrypt.compare(dto.password, user.password);
-    if (!checkPassword)
-      return new BadRequestException(AppErrors.WRONG_PASSWORD);
+    if (!checkPassword) throw new BadRequestException(AppErrors.WRONG_PASSWORD);
     delete user.password;
     const payload = {
       email: user.email,
@@ -60,9 +57,6 @@ export class AuthService {
       roles: user.roles,
     };
     const token = await this.tokenService.generateJwtToken(payload);
-    return {
-      ...user,
-      token,
-    } as RegisterUserResponse;
+    return token;
   }
 }
