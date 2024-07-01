@@ -5,6 +5,8 @@ import * as bcrypt from 'bcrypt';
 import { AppErrors } from 'src/common/errors';
 import { RegisterUserDTO, LoginUserDTO } from './dto';
 import { RegisterUserResponse } from './responses';
+import { PrismaService } from '../prisma/prisma.service';
+import { IToken } from 'src/common/interfaces/auth';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +14,7 @@ export class AuthService {
   constructor(
     private readonly userService: UsersService,
     private readonly tokenService: TokenService,
+    private readonly prismaService: PrismaService,
   ) {}
   public async registerUser(
     dto: RegisterUserDTO,
@@ -31,6 +34,8 @@ export class AuthService {
     const payload = {
       email: dto.email,
       id: newUser.id,
+      name: newUser.name,
+      roles: newUser.roles,
     };
     const token = await this.tokenService.generateJwtToken(payload);
     return {
@@ -58,5 +63,9 @@ export class AuthService {
     };
     const token = await this.tokenService.generateJwtToken(payload);
     return token;
+  }
+
+  public async getRefreshTokens(refreshToken: string): Promise<IToken> {
+    return await this.tokenService.refreshTokens(refreshToken);
   }
 }

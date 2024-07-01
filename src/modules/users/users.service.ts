@@ -26,9 +26,7 @@ export class UsersService {
   private async isValidUuid(val: string): Promise<boolean> {
     return validator.isUUID(val);
   }
-  public async getPublicUser(
-    idOrEmail: string,
-  ): Promise<UserResponseInfo | Error> {
+  public async getPublicUser(idOrEmail: string): Promise<UserResponseInfo> {
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [{ id: idOrEmail }, { email: idOrEmail }],

@@ -1,7 +1,7 @@
 import {
-  BadRequestException,
   Body,
   Controller,
+  Get,
   HttpStatus,
   Post,
   Res,
@@ -14,8 +14,8 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { IToken } from 'src/common/interfaces/auth';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { AppErrors } from 'src/common/errors';
-
+import { Cookie } from '@common/decorators';
+const REFRESH_TOKEN = 'fresh';
 @ApiTags('API')
 @Controller('auth')
 export class AuthController {
@@ -25,10 +25,10 @@ export class AuthController {
   ) {}
   @ApiResponse({ status: 201, type: RegisterUserResponse })
   @Post('register')
-  registerUser(
+  async registerUser(
     @Body() dto: RegisterUserDTO,
   ): Promise<RegisterUserResponse | Error> {
-    return this.authService.registerUser(dto);
+    return await this.authService.registerUser(dto);
   }
   @ApiResponse({ status: 201 })
   @Post('login')
@@ -36,11 +36,21 @@ export class AuthController {
     const user = await this.authService.loginUser(dto);
     this.setRefreshTokenToCookies(user, res);
   }
+  @Get('refresh-tokens')
+  async refreshTokens(
+    @Cookie(REFRESH_TOKEN) refreshToken: string,
+    @Res() res: Response,
+  ) {
+    if (!refreshToken) throw new UnauthorizedException();
+    const tokens = await this.authService.getRefreshTokens(refreshToken);
+    if (!tokens) throw new UnauthorizedException();
+    return this.setRefreshTokenToCookies(tokens, res);
+  }
 
   private setRefreshTokenToCookies(tokens: IToken, res: Response) {
     if (!tokens) throw new UnauthorizedException();
 
-    res.cookie('refreshToken', tokens.refreshToken.token, {
+    res.cookie(REFRESH_TOKEN, tokens.refreshToken.token, {
       httpOnly: true,
       sameSite: 'lax',
       expires: new Date(tokens.refreshToken.exp),
@@ -48,6 +58,6 @@ export class AuthController {
         this.configService.get('NODE_ENV', 'development') === 'production',
       path: '/',
     });
-    res.status(HttpStatus.CREATED).json(tokens);
+    res.status(HttpStatus.CREATED).json({ token: tokens.token });
   }
 }
