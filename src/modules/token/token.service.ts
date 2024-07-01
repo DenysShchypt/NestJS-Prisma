@@ -24,6 +24,7 @@ export class TokenService {
 
   private async generateToken(
     user: IJWTUser | UserResponseInfo,
+    agent: string,
   ): Promise<IToken> {
     const payload = { user };
     const token =
@@ -32,26 +33,39 @@ export class TokenService {
         secret: this.configService.get('secret'),
         expiresIn: this.configService.get('expireJwt'),
       });
-    const refreshToken = await this.generateRefreshToken(user.id);
+    const refreshToken = await this.generateRefreshToken(user.id, agent);
     return {
       token,
       refreshToken,
     };
   }
-  public async generateJwtToken(user: IJWTUser): Promise<IToken> {
-    return await this.generateToken(user);
+  public async generateJwtToken(
+    user: IJWTUser,
+    agent: string,
+  ): Promise<IToken> {
+    return await this.generateToken(user, agent);
   }
 
-  public async generateRefreshToken(id: string): Promise<IAccessToken> {
-    return this.prisma.token.create({
-      data: {
+  public async generateRefreshToken(
+    id: string,
+    agent: string,
+  ): Promise<IAccessToken> {
+    const _token = await this.prisma.token.findFirst({
+      where: { userId: id, userAgent: agent },
+    });
+    const token = _token?.token ?? '';
+    return this.prisma.token.upsert({
+      where: { token },
+      update: { token: v4(), exp: add(new Date(), { months: 1 }) },
+      create: {
         token: v4(),
         exp: add(new Date(), { months: 1 }),
         userId: id,
+        userAgent: agent,
       },
     });
   }
-  async refreshTokens(refreshToken: string): Promise<IToken> {
+  async refreshTokens(refreshToken: string, agent: string): Promise<IToken> {
     const token = await this.prisma.token.findUnique({
       where: { token: refreshToken },
     });
@@ -64,6 +78,6 @@ export class TokenService {
       throw new UnauthorizedException();
     }
     const user = await this.userService.getPublicUser(token.userId);
-    return await this.generateToken(user);
+    return await this.generateToken(user, agent);
   }
 }

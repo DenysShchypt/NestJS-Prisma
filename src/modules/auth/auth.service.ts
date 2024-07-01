@@ -18,6 +18,7 @@ export class AuthService {
   ) {}
   public async registerUser(
     dto: RegisterUserDTO,
+    agent: string,
   ): Promise<RegisterUserResponse | Error> {
     const newUser = await this.userService.createUser(dto).catch((error) => {
       this.logger.error(`Error during register user: ${error.message}`);
@@ -37,14 +38,14 @@ export class AuthService {
       name: newUser.name,
       roles: newUser.roles,
     };
-    const token = await this.tokenService.generateJwtToken(payload);
+    const token = await this.tokenService.generateJwtToken(payload, agent);
     return {
       ...dataUser,
       token,
     };
   }
 
-  public async loginUser(dto: LoginUserDTO) {
+  public async loginUser(dto: LoginUserDTO, agent: string): Promise<IToken> {
     const user = await this.userService
       .getUserAllInfo(dto.email)
       .catch((error) => {
@@ -61,11 +62,14 @@ export class AuthService {
       name: user.name,
       roles: user.roles,
     };
-    const token = await this.tokenService.generateJwtToken(payload);
+    const token = await this.tokenService.generateJwtToken(payload, agent);
     return token;
   }
 
-  public async getRefreshTokens(refreshToken: string): Promise<IToken> {
-    return await this.tokenService.refreshTokens(refreshToken);
+  public async getRefreshTokens(
+    refreshToken: string,
+    agent: string,
+  ): Promise<IToken> {
+    return await this.tokenService.refreshTokens(refreshToken, agent);
   }
 }
