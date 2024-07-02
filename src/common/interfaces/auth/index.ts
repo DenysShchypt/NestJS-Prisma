@@ -3,6 +3,12 @@ export interface IJwtPlayLoad {
   iat: number;
   exp: number;
 }
+export interface IJWTUser {
+  id: string;
+  email: string;
+  name: string;
+  roles: Role[];
+}
 
 export interface IUserJWT {
   email: string;

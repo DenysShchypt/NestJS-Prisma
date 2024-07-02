@@ -11,7 +11,7 @@ import { AppErrors } from 'src/common/errors';
 import { RegisterUserDTO } from '../auth/dto';
 import { UserUpdateDTO } from './dto';
 import { UpdateUserResponse, UserResponseInfo } from './responses';
-import { Role } from 'src/common/interfaces/auth';
+import { IJWTUser, Role } from 'src/common/interfaces/auth';
 
 @Injectable()
 export class UsersService {
@@ -26,9 +26,7 @@ export class UsersService {
   private async isValidUuid(val: string): Promise<boolean> {
     return validator.isUUID(val);
   }
-  public async getPublicUser(
-    idOrEmail: string,
-  ): Promise<UserResponseInfo | Error> {
+  public async getPublicUser(idOrEmail: string): Promise<UserResponseInfo> {
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [{ id: idOrEmail }, { email: idOrEmail }],
@@ -90,9 +88,17 @@ export class UsersService {
     });
   }
 
-  public async deleteUser(id: string): Promise<void | Error> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) return new BadRequestException(AppErrors.USER_NOT_FOUND);
-    await this.prisma.user.delete({ where: { id } });
+  public async deleteUser(id: string, userCurrent: IJWTUser) {
+    if (userCurrent.id !== id && !userCurrent.roles.includes(Role.ADMIN)) {
+      return new BadRequestException(AppErrors.ADMIN_DELETE_USER);
+    }
+    const user = await this.prisma.user.findUnique({
+      where: { id: userCurrent.id },
+    });
+    if (!user) throw new BadRequestException(AppErrors.USER_NOT_FOUND);
+    return await this.prisma.user.delete({
+      where: { id: user.id },
+      select: { id: true },
+    });
   }
 }

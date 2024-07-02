@@ -5,6 +5,8 @@ import * as bcrypt from 'bcrypt';
 import { AppErrors } from 'src/common/errors';
 import { RegisterUserDTO, LoginUserDTO } from './dto';
 import { RegisterUserResponse } from './responses';
+import { PrismaService } from '../prisma/prisma.service';
+import { IToken } from 'src/common/interfaces/auth';
 
 @Injectable()
 export class AuthService {
@@ -12,9 +14,11 @@ export class AuthService {
   constructor(
     private readonly userService: UsersService,
     private readonly tokenService: TokenService,
+    private readonly prismaService: PrismaService,
   ) {}
   public async registerUser(
     dto: RegisterUserDTO,
+    agent: string,
   ): Promise<RegisterUserResponse | Error> {
     const newUser = await this.userService.createUser(dto).catch((error) => {
       this.logger.error(`Error during register user: ${error.message}`);
@@ -31,27 +35,26 @@ export class AuthService {
     const payload = {
       email: dto.email,
       id: newUser.id,
+      name: newUser.name,
+      roles: newUser.roles,
     };
-    const token = await this.tokenService.generateJwtToken(payload);
+    const token = await this.tokenService.generateJwtToken(payload, agent);
     return {
       ...dataUser,
       token,
     };
   }
 
-  public async loginUser(
-    dto: LoginUserDTO,
-  ): Promise<RegisterUserResponse | Error> {
+  public async loginUser(dto: LoginUserDTO, agent: string): Promise<IToken> {
     const user = await this.userService
       .getUserAllInfo(dto.email)
       .catch((error) => {
         this.logger.error(`Error during login user: ${error.message}`);
         return null;
       });
-    if (!user) return new BadRequestException(AppErrors.USER_NOT_FOUND);
+    if (!user) throw new BadRequestException(AppErrors.USER_NOT_FOUND);
     const checkPassword = await bcrypt.compare(dto.password, user.password);
-    if (!checkPassword)
-      return new BadRequestException(AppErrors.WRONG_PASSWORD);
+    if (!checkPassword) throw new BadRequestException(AppErrors.WRONG_PASSWORD);
     delete user.password;
     const payload = {
       email: user.email,
@@ -59,10 +62,17 @@ export class AuthService {
       name: user.name,
       roles: user.roles,
     };
-    const token = await this.tokenService.generateJwtToken(payload);
-    return {
-      ...user,
-      token,
-    } as RegisterUserResponse;
+    const token = await this.tokenService.generateJwtToken(payload, agent);
+    return token;
+  }
+
+  public async getRefreshTokens(
+    refreshToken: string,
+    agent: string,
+  ): Promise<IToken> {
+    return await this.tokenService.refreshTokens(refreshToken, agent);
+  }
+  public async deleteRefreshToken(token: string) {
+    return await this.prismaService.token.delete({ where: { token } });
   }
 }
