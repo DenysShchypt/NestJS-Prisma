@@ -72,4 +72,7 @@ export class AuthService {
   ): Promise<IToken> {
     return await this.tokenService.refreshTokens(refreshToken, agent);
   }
+  public async deleteRefreshToken(token: string) {
+    return await this.prismaService.token.delete({ where: { token } });
+  }
 }

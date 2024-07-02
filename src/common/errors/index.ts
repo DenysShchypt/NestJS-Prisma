@@ -5,4 +5,5 @@ export const AppErrors = {
   WRONG_EMAIL: 'Email is incorrect',
   WRONG_EMAIL_OR_PASSWORD: 'Email or password is incorrect',
   WRONG_TOKEN: 'Token is incorrect',
+  ADMIN_DELETE_USER: 'Remove user forbidden for your account',
 };

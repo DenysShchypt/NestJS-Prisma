@@ -15,6 +15,8 @@ import { JWTAuthGuard } from 'src/common/guards/jwt-guard';
 import { UpdateUserResponse, UserResponseInfo } from './responses';
 import { UserUpdateDTO } from './dto';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '@common/decorators';
+import { IJWTUser } from 'src/common/interfaces/auth';
 @ApiTags('API')
 @Controller('users')
 export class UsersController {
@@ -40,9 +42,11 @@ export class UsersController {
   }
   @ApiResponse({ status: 200 })
   @UseGuards(JWTAuthGuard)
-  @Delete('delete')
-  public async deleteUser(@Req() request): Promise<void | Error> {
-    const { id } = request.user;
-    return await this.usersService.deleteUser(id);
+  @Delete('delete/:id')
+  public async deleteUser(
+    @Param('id') id: string,
+    @CurrentUser() user: IJWTUser,
+  ) {
+    return await this.usersService.deleteUser(id, user);
   }
 }
