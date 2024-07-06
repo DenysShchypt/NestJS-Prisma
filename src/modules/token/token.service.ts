@@ -77,7 +77,7 @@ export class TokenService {
     if (new Date(token.exp) < new Date()) {
       throw new UnauthorizedException();
     }
-    const user = await this.userService.getPublicUser(token.userId);
+    const user = await this.userService.getPublicUser(token.userId, true);
     return await this.generateToken(user, agent);
   }
 }

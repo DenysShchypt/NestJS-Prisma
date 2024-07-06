@@ -47,7 +47,7 @@ export class AuthService {
 
   public async loginUser(dto: LoginUserDTO, agent: string): Promise<IToken> {
     const user = await this.userService
-      .getUserAllInfo(dto.email)
+      .getUserAllInfo(dto.email, true)
       .catch((error) => {
         this.logger.error(`Error during login user: ${error.message}`);
         return null;
