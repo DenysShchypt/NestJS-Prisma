@@ -3,7 +3,7 @@ import { UsersService } from '../users/users.service';
 import { TokenService } from '../token/token.service';
 import * as bcrypt from 'bcrypt';
 import { AppErrors } from 'src/common/errors';
-import { RegisterUserDTO, LoginUserDTO } from './dto';
+import { RegisterUserDTO, LoginUserDTO, GoogleUserDTO } from './dto';
 import { RegisterUserResponse } from './responses';
 import { PrismaService } from '../prisma/prisma.service';
 import { IToken } from 'src/common/interfaces/auth';
@@ -64,6 +64,15 @@ export class AuthService {
     };
     const token = await this.tokenService.generateJwtToken(payload, agent);
     return token;
+  }
+
+  public async enterGoogleAuth(dto: GoogleUserDTO, agent: string) {
+    const user = await this.userService
+      .getUserAllInfo(dto.email, true)
+      .catch((error) => {
+        this.logger.error(`Error during login user: ${error.message}`);
+        return null;
+      });
   }
 
   public async getRefreshTokens(

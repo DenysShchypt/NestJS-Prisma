@@ -32,3 +32,23 @@ export class LoginUserDTO {
   @IsString()
   passwordRepeat: string;
 }
+export class GoogleUserDTO {
+  @ApiProperty({ example: 'john@example.com' })
+  @IsEmail()
+  email: string;
+  @ApiProperty({ example: 'google' })
+  @IsString()
+  provider: string;
+  @ApiProperty({ example: '46478642345867234548645' })
+  @IsString()
+  providerId: string;
+  @ApiProperty({ example: 'Denys Developer' })
+  @IsString()
+  name: string;
+  @ApiProperty({
+    example:
+      'https://lh3.googleusercontent.com/a/ACg8ocJ-OcEr6cr50Ak6Sz7LGMK6MXRH44O0ULhXbAtpn6lMa0OGlgQ=s96-c',
+  })
+  @IsString()
+  picture: string;
+}

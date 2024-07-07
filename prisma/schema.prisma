@@ -16,11 +16,14 @@ model User {
   id             String           @id @default(uuid())
   email          String           @unique @db.VarChar(45)
   name           String
-  password       String
-  passwordRepeat String
+  password       String?
+  passwordRepeat String?
+  provider       String?
+  providerId     String?
   wallet         Float            @default(0)
   createAt       DateTime         @default(now()) @map("created_at")
   updateAt       DateTime         @default(now()) @map("updated_at")
+  picture        String?
   roles          Role[]
   payment        Payment[]
   SuccessPayment SuccessPayment[]
@@ -32,11 +35,11 @@ model User {
 }
 
 model Token {
-  token  String   @unique
-  exp    DateTime
-  user   User     @relation(fields: [userId], references: [id],onDelete: Cascade)
-  userId String
-  userAgent String @map("user_agent")
+  token     String   @unique
+  exp       DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  userAgent String   @map("user_agent")
 
   @@map("tokens")
 }
