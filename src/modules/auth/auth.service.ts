@@ -6,7 +6,9 @@ import { AppErrors } from 'src/common/errors';
 import { RegisterUserDTO, LoginUserDTO, GoogleUserDTO } from './dto';
 import { RegisterUserResponse } from './responses';
 import { PrismaService } from '../prisma/prisma.service';
-import { IToken } from 'src/common/interfaces/auth';
+import { IToken, Role } from 'src/common/interfaces/auth';
+import { USER_SELECT_FIELDS } from 'src/common/constants';
+import { Provider } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -26,12 +28,6 @@ export class AuthService {
     });
 
     if (newUser === true) return new BadRequestException(AppErrors.USER_EXISTS);
-    const dataUser = {
-      ...newUser,
-      id: newUser.id,
-      wallet: 0,
-      roles: newUser.roles,
-    };
     const payload = {
       email: dto.email,
       id: newUser.id,
@@ -40,7 +36,7 @@ export class AuthService {
     };
     const token = await this.tokenService.generateJwtToken(payload, agent);
     return {
-      ...dataUser,
+      ...newUser,
       token,
     };
   }
@@ -67,12 +63,39 @@ export class AuthService {
   }
 
   public async enterGoogleAuth(dto: GoogleUserDTO, agent: string) {
-    const user = await this.userService
-      .getUserAllInfo(dto.email, true)
-      .catch((error) => {
-        this.logger.error(`Error during login user: ${error.message}`);
-        return null;
+    const user = await this.prismaService.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      const newUser = await this.prismaService.user.create({
+        data: {
+          email: dto.email,
+          name: dto.name,
+          roles: [Role.USER],
+          picture: dto.picture,
+          provider: Provider.GOOGLE,
+          providerId: dto.providerId,
+        },
+        select: USER_SELECT_FIELDS,
       });
+      const payload = {
+        email: dto.email,
+        id: newUser.id,
+        name: newUser.name,
+        roles: newUser.roles,
+      };
+      const token = await this.tokenService.generateJwtToken(payload, agent);
+      return token;
+    }
+    const payload = {
+      email: user.email,
+      id: user.id,
+      name: user.name,
+      roles: user.roles,
+    };
+    const token = await this.tokenService.generateJwtToken(payload, agent);
+    return token;
   }
 
   public async getRefreshTokens(

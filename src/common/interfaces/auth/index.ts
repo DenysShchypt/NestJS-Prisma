@@ -1,3 +1,5 @@
+import { $Enums } from '@prisma/client';
+
 export interface IJwtPlayLoad {
   user: IUserJWT;
   iat: number;
@@ -7,7 +9,7 @@ export interface IJWTUser {
   id: string;
   email: string;
   name: string;
-  roles: Role[];
+  roles: Role[] | $Enums.Role[];
 }
 
 export interface IUserJWT {

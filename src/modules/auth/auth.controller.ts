@@ -85,10 +85,8 @@ export class AuthController {
     @Res() res: Response,
     @UserAgent() agent: string,
   ) {
-    const user = await this.authService.enterGoogleAuth(req.user, agent);
-    // const user = await this.authService.loginUser(req.user, agent);
-    this.setRefreshTokenToCookies(user, res);
-    // return res.redirect('http://localhost:4000/api/auth/success');
+    const token = await this.authService.enterGoogleAuth(req.user, agent);
+    this.setRefreshTokenToCookies(token, res);
   }
   private setRefreshTokenToCookies(tokens: IToken, res: Response) {
     if (!tokens) throw new UnauthorizedException();
