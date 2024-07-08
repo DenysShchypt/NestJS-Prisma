@@ -1,6 +1,7 @@
 import { IsPasswordsMatching } from '@common/decorators';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNumber, IsString, Validate } from 'class-validator';
+import { Provider } from '@prisma/client';
+import { IsEmail, IsEnum, IsNumber, IsString, Validate } from 'class-validator';
 
 export class RegisterUserDTO {
   @ApiProperty({ example: 'john@example.com' })
@@ -31,4 +32,24 @@ export class LoginUserDTO {
   @ApiProperty({ example: 'qwerty@123456Q' })
   @IsString()
   passwordRepeat: string;
+}
+export class GoogleUserDTO {
+  @ApiProperty({ example: 'john@example.com' })
+  @IsEmail()
+  email: string;
+  @ApiProperty({ example: 'GOOGLE', enum: Provider })
+  @IsEnum(Provider)
+  provider: Provider;
+  @ApiProperty({ example: '46478642345867234548645' })
+  @IsString()
+  providerId: string;
+  @ApiProperty({ example: 'Denys Developer' })
+  @IsString()
+  name: string;
+  @ApiProperty({
+    example:
+      'https://lh3.googleusercontent.com/a/ACg8ocJ-OcEr6cr50Ak6Sz7LGMK6MXRH44O0ULhXbAtpn6lMa0OGlgQ=s96-c',
+  })
+  @IsString()
+  picture: string;
 }

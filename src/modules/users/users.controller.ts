@@ -18,11 +18,11 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators';
 import { IJWTUser } from 'src/common/interfaces/auth';
 @ApiTags('API')
+@UseGuards(JWTAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   @ApiResponse({ status: 200, type: UserResponseInfo })
-  @UseGuards(JWTAuthGuard)
   @Get('info/:idOrEmail')
   public async getInfoUser(
     @Param('idOrEmail') idOrEmail: string,
@@ -30,7 +30,6 @@ export class UsersController {
     return await this.usersService.getPublicUser(idOrEmail);
   }
   @ApiResponse({ status: 200, type: UpdateUserResponse })
-  @UseGuards(JWTAuthGuard)
   @Patch('update')
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   public async updateUser(
@@ -41,7 +40,6 @@ export class UsersController {
     return await this.usersService.updateUser(id, userUpdateDTO);
   }
   @ApiResponse({ status: 200 })
-  @UseGuards(JWTAuthGuard)
   @Delete('delete/:id')
   public async deleteUser(
     @Param('id') id: string,

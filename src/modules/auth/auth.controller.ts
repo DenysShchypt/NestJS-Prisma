@@ -4,8 +4,10 @@ import {
   Get,
   HttpStatus,
   Post,
+  Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterUserDTO, LoginUserDTO } from './dto';
@@ -15,6 +17,7 @@ import { IToken } from 'src/common/interfaces/auth';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { Cookie, UserAgent } from '@common/decorators';
+import { GoogleOauthGuard } from 'src/common/guards/google-oauth.guard';
 const REFRESH_TOKEN = 'fresh';
 @ApiTags('API')
 @Controller('auth')
@@ -71,7 +74,20 @@ export class AuthController {
     if (!tokens) throw new UnauthorizedException();
     return this.setRefreshTokenToCookies(tokens, res);
   }
+  @UseGuards(GoogleOauthGuard)
+  @Get('google')
+  authGoogle() {}
 
+  @UseGuards(GoogleOauthGuard)
+  @Get('google/callback')
+  async authGoogleCallback(
+    @Req() req,
+    @Res() res: Response,
+    @UserAgent() agent: string,
+  ) {
+    const token = await this.authService.enterGoogleAuth(req.user, agent);
+    this.setRefreshTokenToCookies(token, res);
+  }
   private setRefreshTokenToCookies(tokens: IToken, res: Response) {
     if (!tokens) throw new UnauthorizedException();
 
