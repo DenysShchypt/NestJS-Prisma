@@ -96,7 +96,7 @@ export class UsersService {
     if (user) return true;
     const salt = await bcrypt.genSalt();
     dto.password = await this.hashPassword(dto.password, salt);
-    return (await this.prisma.user.create({
+    const createUser = await this.prisma.user.create({
       data: {
         email: dto.email,
         name: dto.name,
@@ -106,7 +106,11 @@ export class UsersService {
         roles: [Role.USER],
       },
       select: USER_SELECT_FIELDS,
-    })) as UserResponseInfo;
+    });
+
+    await this.cacheManager.set(createUser.id, createUser);
+    await this.cacheManager.set(createUser.email, createUser);
+    return createUser as UserResponseInfo;
   }
   public async updateUser(
     id: string,
@@ -120,6 +124,7 @@ export class UsersService {
         email: dto.email,
         name: dto.name,
         wallet: dto.wallet,
+        picture: dto.picture,
       },
       select: USER_UPDATE_FIELDS,
     });
